@@ -185,11 +185,25 @@ async function getSelfUserId() {
   return null;
 }
 
-function posterOf(item) {
-  const file = item.file || item;
-  const id = file.id || file.fileId;
+/**
+ * Miniatura horizontal 16:9 del fotograma elegido por el autor.
+ * - /image/original/… es el fotograma completo (paisaje).
+ * - /image/thumbnail/… es una versión pequeña del mismo fotograma.
+ * Kino recorta el `poster` a 2:3 en las tarjetas del Home; el `backdrop`
+ * se muestra a 16:9 en la ficha del título.
+ */
+function thumbUrl(item) {
+  const file = (item && item.file) || item || {};
+  const id = file.id || file.fileId || (item && item.fileId);
   if (!id) return undefined;
-  return FILES + "/image/thumbnail/" + id + "/thumbnail-00.jpg";
+  let idx = 0;
+  if (item && item.thumbnail != null && item.thumbnail !== "") {
+    const n = Number(item.thumbnail);
+    if (Number.isFinite(n) && n >= 0 && n <= 99) idx = Math.floor(n);
+  }
+  const nn = idx < 10 ? "0" + idx : String(idx);
+  // original = fotograma completo 16:9; files.iwara.tv es el CDN de medios
+  return FILES + "/image/original/" + id + "/thumbnail-" + nn + ".jpg";
 }
 
 function toItem(v) {
@@ -201,13 +215,17 @@ function toItem(v) {
   const badges = [];
   if (user.name) badges.push(String(user.name).slice(0, 40));
   if (v.file && v.file.height) badges.push(String(v.file.height) + "p");
+  const thumb = thumbUrl(v);
   return {
     id: v.id,
     ref: v.id,
     title: String(v.title || v.id).slice(0, 200),
     kind: "movie",
     year,
-    poster: posterOf(v),
+    // poster: tarjetas del Home (Kino lo recorta a 2:3)
+    // backdrop: ficha del título a 16:9 horizontal completo
+    poster: thumb,
+    backdrop: thumb,
     overview: v.body ? String(v.body).replace(/<[^>]+>/g, "").slice(0, 400) : undefined,
     adult: v.rating === "ecchi",
     badges: badges.length ? badges : undefined,
