@@ -1,4 +1,7 @@
 /// <reference path="./kino.d.ts" />
+// Kino plugin: Iwara (iwara.tv) — v1.6.0
+// Cambio: en Home los vídeos se muestran como tarjetas horizontales 16:9
+// (tarjetas de canal, kind "live") en vez del póster vertical recortado (2:3).
 
 const API = "https://api.iwara.tv";
 const FILES = "https://files.iwara.tv";
@@ -212,6 +215,34 @@ function toItem(v) {
     adult: v.rating === "ecchi",
     badges: badges.length ? badges : undefined,
   };
+}
+
+/**
+ * Kino dibuja el `poster` de una película en una tarjeta vertical 2:3 y la recorta,
+ * así que la miniatura 16:9 de Iwara se ve cortada. La única tarjeta horizontal 16:9
+ * de una fila de Inicio es la tarjeta de canal (`kind: "live"`, apiVersion 6):
+ * cada vídeo de una fila de Home se devuelve como canal, se ve completo a 16:9
+ * y al tocarla reproduce directo con el mismo `resolve(ref)` de siempre.
+ * (Búsqueda y "Ver más" siguen devolviendo películas normales, con página de
+ * información, biblioteca y "Continuar viendo".)
+ */
+function toHomeCard(item) {
+  if (!item) return null;
+  return {
+    id: item.id,
+    ref: item.ref,
+    title: item.title,
+    kind: "live",
+    poster: item.poster,
+    badges: item.badges,
+    adult: item.adult,
+  };
+}
+
+/** Una fila de Inicio con tarjetas horizontales 16:9; null si no queda nada. */
+function homeRow(id, title, items, ref) {
+  const cards = (items || []).map(toHomeCard).filter(Boolean);
+  return cards.length ? { id, title, items: cards, ref } : null;
 }
 
 function pageCursor(page) {
@@ -447,14 +478,8 @@ export async function home() {
     // Suscripciones
     try {
       const items = await listVideos({ sort: "date", subscribed: "true" });
-      if (items.length) {
-        rows.push({
-          id: "subscribed",
-          title: "Tus suscripciones",
-          items,
-          ref: "subscribed",
-        });
-      }
+      const row = homeRow("subscribed", "Tus suscripciones", items, "subscribed");
+      if (row) rows.push(row);
     } catch (e) {
       log("home subscribed", e.message || e);
     }
@@ -463,14 +488,8 @@ export async function home() {
     try {
       const fav = await listFavorites(0, 20);
       const items = Array.isArray(fav) ? fav : fav.items || [];
-      if (items.length) {
-        rows.push({
-          id: "favorites",
-          title: "Tus favoritos",
-          items,
-          ref: "favorites",
-        });
-      }
+      const row = homeRow("favorites", "Tus favoritos", items, "favorites");
+      if (row) rows.push(row);
     } catch (e) {
       log("home favorites", e.message || e);
     }
@@ -485,14 +504,13 @@ export async function home() {
           try {
             const vids = await listPlaylistVideos(pl.id, 0, 16);
             const items = Array.isArray(vids) ? vids : vids.items || [];
-            if (items.length) {
-              rows.push({
-                id: "playlist-" + pl.id,
-                title: String(pl.title || pl.name || "Playlist").slice(0, 60),
-                items,
-                ref: "playlist:" + pl.id,
-              });
-            }
+            const row = homeRow(
+              "playlist-" + pl.id,
+              String(pl.title || pl.name || "Playlist").slice(0, 60),
+              items,
+              "playlist:" + pl.id
+            );
+            if (row) rows.push(row);
           } catch (e) {
             log("home playlist", pl.id, e.message || e);
           }
@@ -512,14 +530,8 @@ export async function home() {
   for (const s of sorts) {
     try {
       const items = await listVideos({ sort: s.sort });
-      if (items.length) {
-        rows.push({
-          id: s.id,
-          title: s.title,
-          items,
-          ref: "sort:" + s.sort,
-        });
-      }
+      const row = homeRow(s.id, s.title, items, "sort:" + s.sort);
+      if (row) rows.push(row);
     } catch (e) {
       log("home sort", s.id, e.message || e);
     }
