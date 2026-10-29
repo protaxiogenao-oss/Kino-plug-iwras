@@ -1,10 +1,10 @@
 {
   "id": "iwara-tv",
   "name": "Iwara",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "apiVersion": 6,
   "entry": "plugin.js",
-  "description": "Videos de iwara.tv. Búsqueda, Inicio, calidad configurable y sesión opcional (privados, suscripciones, favoritos y playlists). Hecho por Hotaru Yume.",
+  "description": "Hecho por Hotaru Yume. Videos de iwara.tv: búsqueda, Inicio, calidad configurable y sesión opcional (privados, suscripciones, favoritos y playlists).",
   "author": "Hotaru Yume",
   "homepage": "https://github.com/yumehotaru41-rgb/kino-plugin-iwara-",
   "icon": "icon.png",

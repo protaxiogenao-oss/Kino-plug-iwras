@@ -521,6 +521,28 @@ export async function home() {
     }
   }
 
+  // Fila VAM (Virt-A-Mate) por tag
+  try {
+    const data = await apiGet("/videos", {
+      rating: "all",
+      tags: "virt_a_mate",
+      sort: "date",
+      page: 0,
+      limit: 20,
+    });
+    const items = (data.results || []).map(toItem).filter(Boolean);
+    if (items.length) {
+      rows.push({
+        id: "vam",
+        title: "VAM",
+        items,
+        ref: "tag:virt_a_mate",
+      });
+    }
+  } catch (e) {
+    log("home vam", e.message || e);
+  }
+
   const sorts = [
     { id: "trending", title: "Tendencias", sort: "trending" },
     { id: "date", title: "Más recientes", sort: "date" },
