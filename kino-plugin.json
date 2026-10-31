@@ -18,7 +18,7 @@
     "*.iwara.tv"
   ],
   "capabilities": ["search", "home", "browse", "resolve"],
-  "categories": ["anime", "adult"],
+  "categories": ["adult"],
   "color": "#7B2CBF",
   "theme": {
     "accent": "#7B2CBF",
